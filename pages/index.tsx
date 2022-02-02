@@ -1,15 +1,38 @@
 import React, { useEffect } from 'react';
 import { Box } from '@mui/system';
-import { Button, Input } from '@mui/material';
+import { Button, Input, Slider, Typography } from '@mui/material';
+
+enum MyColor {
+  Greater,
+  Less,
+  Equal,
+  Outside
+}
 
 type BarProps = {
   height: number,
   width: number,
+  cmp: MyColor
 };
 
-function Bar({ width, height }: BarProps) {
+function Bar({ width, height, cmp }: BarProps) {
+  let color: string;
+  switch (cmp) {
+    case MyColor.Greater:
+      color = "pink";
+      break;
+    case MyColor.Less:
+      color = "lightblue";
+      break;
+    case MyColor.Equal:
+      color = "black";
+      break;
+    case MyColor.Outside:
+      color = "lightgray";
+      break;
+  }
   return <Box sx={{
-    backgroundColor: 'lightgrey',
+    backgroundColor: color,
     width: String(width) + "%",
     height: String(height * 100) + "%",
   }}>
@@ -19,46 +42,6 @@ function Bar({ width, height }: BarProps) {
 function genNew(num: number): number[] {
   return [...Array(num)].map(Math.random);
 }
-
-/* function merge(left: number[], right: number[]): number[] {
-  let arr: number[] = []
-  while (left.length && right.length) {
-    let num;
-    if (left[0] < right[0]) {
-      num = left.shift();
-    } else {
-      num = right.shift();
-    }
-    if (num) {
-      arr.push(num)
-    }
-  }
-  return [...arr, ...left, ...right]
-}
-
-async function mergeSort(array: number[], field: number[], setField: React.Dispatch<React.SetStateAction<number[]>>): Promise<number[]> {
-  const whole = array.length;
-  const half = whole / 2;
-
-  if (array.length < 2) {
-    return array
-  }
-
-  const left = array.splice(0, half)
-
-  const myPromise = new Promise<number[]>(async (resolve, reject) => {
-    setTimeout(async () => {
-      console.log(half, whole)
-      console.log(left, array, field)
-      const test = merge(await mergeSort(left, field, setField), await mergeSort(array, field, setField));
-      setField(test);
-      resolve(test);
-    }, 300);
-  });
-
-
-  return await myPromise;
-} */
 
 type MyType = (array: number[], begin: number, mid: number, end: number) => any;
 
@@ -77,7 +60,7 @@ async function merge(a: number[], b: number[], begin: number, middle: number, en
   const myPromise = new Promise<number[]>(async (resolve, reject) => {
     setTimeout(async () => {
       resolve(b)
-    }, 300);
+    }, WAIT_TIME);
   });
 
   return await myPromise;
@@ -94,7 +77,6 @@ async function merge_top_down(a: number[], b: number[], begin: number, end: numb
     await merge_top_down(b, a, begin, mid, setField);
     await merge_top_down(b, a, mid, end, setField);
     const test = await merge(b, a, begin, mid, end)
-    console.log(begin, mid, end)
     setField(test, begin, mid, end);
     resolve(test);
   });
@@ -108,14 +90,22 @@ async function merge_sort(a: number[], setField: MyType): Promise<number[]> {
   return a;
 }
 
+let WAIT_TIME = 0;
+
 function App() {
   let [field, setField] = React.useState<number[]>([]);
-  let [number, setNumber] = React.useState(10);
+  let [number, setNumber] = React.useState(100);
+  let [speed, setSpeed] = React.useState(5);
   let [sorting, setSorting] = React.useState(false);
+  let [bounds, setBounds] = React.useState<{ begin: number, mid: number, end: number }>({ begin: 0, mid: Math.floor(field.length), end: field.length });
 
-  let sorttest: MyType = (array, begin, number, end) => {
+  let sorttest: MyType = (array, begin, mid, end) => {
     setField(array);
+    setBounds({ begin, mid, end });
   }
+
+  WAIT_TIME = 30_000 / (field.length * Math.pow(speed, 1.5)) + (30 * Math.pow(speed, -2));
+  console.log(WAIT_TIME, field.length, speed);
 
   return <>
     <Box sx={{
@@ -124,8 +114,22 @@ function App() {
       justifyContent: 'space-between',
     }}>
       {
+
         field.map((height, i) => {
-          return <Bar key={i} width={80 / field.length} height={height} />
+          let cmp: MyColor;
+          if (i < bounds.begin || i >= bounds.end) {
+            cmp = MyColor.Outside;
+          }
+          else if (i == bounds.mid) {
+            cmp = MyColor.Equal;
+          }
+          else if (i < bounds.mid) {
+            cmp = MyColor.Less;
+          }
+          else {
+            cmp = MyColor.Greater;
+          }
+          return <Bar key={i} width={80 / field.length} height={height} cmp={cmp} />
         })
       }
     </Box>
@@ -158,13 +162,17 @@ function App() {
           setField(shuffled);
         }}>Shuffle</Button>
       </Box>
-
+      <Typography>Speed</Typography>
+      <Slider min={1} max={10} marks step={1} value={speed} onChange={((e) => { setSpeed(e.target.value) })}></Slider>
       <Button variant="contained" disabled={sorting} onClick={async () => {
         setSorting(true);
         await merge_sort(field, sorttest);
         setSorting(false);
+        setTimeout(() => {
+          setBounds({ begin: field.length, mid: field.length, end: field.length });
+        }, 300);
       }}>Sort</Button>
-    </Box>
+    </Box >
   </>;
 }
 
