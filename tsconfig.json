@@ -24,8 +24,8 @@
     "**/*.ts",
     "**/*.tsx",
     "pages/index.tsx",
-    "pages/test.tsx"
-  ],
+    "test.tsx"
+, "test.tsx.old"  ],
   "exclude": [
     "node_modules"
   ]

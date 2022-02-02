@@ -163,7 +163,12 @@ function App() {
         }}>Shuffle</Button>
       </Box>
       <Typography>Speed</Typography>
-      <Slider min={1} max={10} marks step={1} value={speed} onChange={((e) => { setSpeed(e.target.value) })}></Slider>
+      <Slider min={1} max={10} marks step={1} value={speed} onChange={(e) => {
+        if (e && e.target && (e.target as HTMLInputElement).value) {
+          const test = parseInt((e.target as HTMLInputElement).value);
+          setSpeed(test);
+        }
+      }}></Slider>
       <Button variant="contained" disabled={sorting} onClick={async () => {
         setSorting(true);
         await merge_sort(field, sorttest);
