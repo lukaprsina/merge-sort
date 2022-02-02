@@ -105,7 +105,6 @@ function App() {
   }
 
   WAIT_TIME = 30_000 / (field.length * Math.pow(speed, 1.5)) + (30 * Math.pow(speed, -2));
-  console.log(WAIT_TIME, field.length, speed);
 
   return <>
     <Box sx={{
