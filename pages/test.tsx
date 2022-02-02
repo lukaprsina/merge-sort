@@ -2,6 +2,61 @@ import React from 'react';
 import { Box } from '@mui/system';
 import { Button, Input } from '@mui/material';
 
+async function mergeSort(arr: number[], n: number) {
+  let curr_size: number;
+  let left_start: number;
+  for (curr_size = 1; curr_size <= n - 1; curr_size = 2 * curr_size) {
+    for (left_start = 0; left_start < n - 1; left_start += 2 * curr_size) {
+      var mid = Math.min(left_start + curr_size - 1, n - 1);
+      var right_end = Math.min(left_start + 2 * curr_size - 1, n - 1);
+
+      setTimeout(async () => {
+        merge(arr, left_start, mid, right_end);
+      }, 300);
+    }
+  }
+}
+
+function merge(arr: number[], l: number, m: number, r: number) {
+  var i, j, k;
+  var n1 = m - l + 1;
+  var n2 = r - m;
+
+  var L = Array(n1).fill(0);
+  var R = Array(n2).fill(0);
+
+  for (i = 0; i < n1; i++)
+    L[i] = arr[l + i];
+  for (j = 0; j < n2; j++)
+    R[j] = arr[m + 1 + j];
+
+  i = 0;
+  j = 0;
+  k = l;
+  while (i < n1 && j < n2) {
+    if (L[i] <= R[j]) {
+      arr[k] = L[i];
+      i++;
+    } else {
+      arr[k] = R[j];
+      j++;
+    }
+    k++;
+  }
+
+  while (i < n1) {
+    arr[k] = L[i];
+    i++;
+    k++;
+  }
+
+  while (j < n2) {
+    arr[k] = R[j];
+    j++;
+    k++;
+  }
+}
+
 type BarProps = {
   height: number,
   width: number,
@@ -17,50 +72,11 @@ function Bar({ width, height }: BarProps) {
 }
 
 function genNew(num: number): number[] {
+  console.log("Generating " + num)
   return [...Array(num)].map(Math.random);
 }
 
-function merge(left: number[], right: number[]): number[] {
-  let arr: number[] = []
-  while (left.length && right.length) {
-    let num;
-    if (left[0] < right[0]) {
-      num = left.shift();
-    } else {
-      num = right.shift();
-    }
-    if (num) {
-      arr.push(num)
-    }
-  }
-  return [...arr, ...left, ...right]
-}
-
-async function mergeSort(array: number[], field: number[], setField: React.Dispatch<React.SetStateAction<number[]>>): Promise<number[]> {
-  const whole = array.length;
-  const half = whole / 2;
-
-  if (array.length < 2) {
-    return array
-  }
-
-  const left = array.splice(0, half)
-
-  const myPromise = new Promise<number[]>(async (resolve, reject) => {
-    setTimeout(async () => {
-      console.log(half, whole)
-      console.log(left, array, field)
-      const test = merge(await mergeSort(left, field, setField), await mergeSort(array, field, setField));
-      setField(test);
-      resolve(test);
-    }, 300);
-  });
-
-
-  return await myPromise;
-}
-
-function App() {
+async function App() {
   let [field, setField] = React.useState<number[]>([]);
   let [number, setNumber] = React.useState(10);
 
@@ -86,28 +102,22 @@ function App() {
       <Box sx={{ width: "100%", justifyContent: "center", display: "flex", gap: "20px 20px" }}>
         <Input type="number" value={number} onChange={(e) => setNumber(parseInt(e.target.value))}></Input>
         <Button variant="contained" onClick={() => {
+          console.log(number, field)
           const temp = genNew(number);
           temp.push(...field);
           setField(temp);
         }}>Add</Button>
 
         <Button variant="contained" onClick={() => {
+          console.log(number, field)
           let temp = field
           temp = temp.slice(number, temp.length - 1);
           setField(temp);
         }}>Remove</Button>
-
-        <Button variant="contained" onClick={() => {
-          let shuffled = field
-            .map(value => ({ value, sort: Math.random() }))
-            .sort((a, b) => a.sort - b.sort)
-            .map(({ value }) => value)
-          setField(shuffled);
-        }}>Shuffle</Button>
       </Box>
 
       <Button variant="contained" onClick={async () => {
-        await mergeSort(field, field, setField);
+        setField(await mergeSort(field, field.length));
       }}>Sort</Button>
     </Box>
   </>;
